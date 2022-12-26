@@ -120,6 +120,19 @@ constexpr Tuple<std::decay_t<T>...> make_tuple(T &&...t)
 return {std::forward<T>(t)...};
 }
 
+namespace detail {
+
+template <class T>
+std::integral_constant<bool, std::tuple_size<T>::value >= 0> has_tuple_size(int);
+
+template <class T>
+std::false_type has_tuple_size(...);
+
+} // end namespace detail
+
+template <class T>
+struct is_tuple : decltype(detail::has_tuple_size<T>(0)) {};
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 template<class... T, std::size_t... Is>
@@ -195,6 +208,11 @@ auto reverse(Tuple<T...> const &t)
     return detail::tuple_reverse(t, std::index_sequence_for<T...>{});
 }
 
+template <class... T>
+auto cat(Tuple<T...> const& t){
+    return t;
+}
+
 template <class... T, class... U>
 auto cat(Tuple<T...> const& t, Tuple<U...> const& u){
     return tuple_cat(t, u, std::index_sequence_for<T...>{}, std::index_sequence_for<U...>{});
@@ -236,6 +254,49 @@ std::ostream& operator<<(std::ostream& os, Tuple<Ts...> const& Tuple){
     toy::apply(Tuple, lambda);
     return os;
 }
+
+///
+// Transform : (t, f) ==> (f(t0), f(t1), .. f(tn-1))
+///
+
+namespace detail{
+
+template<class Tuple, class F, class G, std::size_t... Is>
+constexpr auto tuple_transform_apply(Tuple&& t, F&& f, G&& g, std::index_sequence<Is...>){
+    return g(f(get<Is>(t))...);
+}
+
+}
+
+template<class Tuple, class F>
+constexpr auto transform(Tuple&& t, F&& f){
+    return detail::tuple_transform_apply(std::forward<Tuple>(t), std::forward<F>(f), [](auto... elems){ return make_tuple(elems...);}, std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+}
+
+///
+// For Each : (t, f) => f(t0),f(t1),...,f(tn)
+///
+
+// template<class Tuple, class F>
+// constexpr void for_each(Tuple&& t, F&& f){
+//      detail::tuple_apply(std::forward<Tuple>(t), [&](auto&&... elems) { (f(static_cast<decltype(elems)&&>(elems)),...); }, std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+// }
+
+///
+// Flattern a tuple
+// t1 :[[1,[3]],[2]]
+// flattern_tuple :[1,3,2]
+///
+
+template<class T>
+constexpr auto flatten_to_tuple(T const& t){ // XXX cat only supports 1/2 arguments.
+    if constexpr (is_tuple<T>::value){
+        return detail::tuple_transform_apply(t, [](auto const& a) { return flatten_to_tuple(a);} , [](auto const&... a){ return cat(a...);}, std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<T>>>{});
+    } else {
+        return make_tuple(t);
+    }
+}
+
 
 } // namespace toy
 

@@ -155,4 +155,54 @@ int main()
         cout<<"Apply :";
         cout<< t2 <<endl;
     }
+
+    {
+        auto lambda = [](auto const& a) { // lambda supports params pack which is different with variadic arguments.
+            return (a + 1); 
+        };
+
+        auto t1 = toy::make_tuple(1,10,100,12,34,4,1,4,5,12,43);
+        auto t2 = toy::transform(t1, lambda);
+        
+        cout << "=======================" << endl;
+        cout << "=========Transform=====" << endl;
+        cout << "=======================" << endl;
+
+        cout<<"t1 :";
+        cout<< t1 <<endl;
+        cout<<"Transform :";
+        cout<< t2 <<endl;
+    }
+
+    // {
+    //     auto lambda = [&](auto a) { // lambda supports params pack which is different with variadic arguments.
+    //         a = a * 2;
+    //         cout<<a;
+    //     };
+
+    //     auto t1 = toy::make_tuple(3,4,5,3,2,1234,15,9);
+        
+    //     cout << "=======================" << endl;
+    //     cout << "=========for_each=====" << endl;
+    //     cout << "=======================" << endl;
+
+    //     cout<<"t1 :";
+    //     cout<< t1 <<endl;
+    //     cout<<"for_each :";
+    //     toy::for_each(t1, lambda); cout<<endl;
+    // }
+
+    {
+        auto t1 = toy::make_tuple(toy::make_tuple(1, toy::make_tuple(3)),toy::make_tuple(2));
+        
+        cout << "=======================" << endl;
+        cout << "====flattern_tuple=====" << endl;
+        cout << "=======================" << endl;
+
+        cout<<"t1 :";
+        cout<< t1 <<endl;
+        cout<<"flattern_tuple :";
+        cout<< toy::flatten_to_tuple(t1)<<endl;
+    }
+
 }
