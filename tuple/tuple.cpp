@@ -205,4 +205,49 @@ int main()
         cout<< toy::flatten_to_tuple(t1)<<endl;
     }
 
+    {
+        auto t1 = toy::make_tuple(toy::make_tuple(1, toy::make_tuple(3)),toy::make_tuple(2));
+        
+        cout << "=======================" << endl;
+        cout << "========front==========" << endl;
+        cout << "=======================" << endl;
+
+        cout<<"t1 :";
+        cout<< t1 <<endl;
+        cout<<"front :";
+        cout<< toy::front(t1)<<endl;
+    }
+
+    {
+        auto t1 = toy::make_tuple(toy::make_tuple(1, toy::make_tuple(3)),toy::make_tuple(2, toy::make_tuple(4)));
+        
+        cout << "=======================" << endl;
+        cout << "===========back========" << endl;
+        cout << "=======================" << endl;
+
+        cout<<"t1 :";
+        cout<< t1 <<endl;
+        cout<<"back :";
+        cout<< toy::back(t1)<<endl;
+    }
+
+    // {
+    //     auto t1 = toy::make_tuple(toy::make_tuple(toy::make_tuple(toy::make_tuple(333), 999)));
+    //     auto t2 = toy::make_tuple(toy::make_tuple(toy::make_tuple(toy::make_tuple(333))));
+        
+    //     cout << "=======================" << endl;
+    //     cout << "===========unwarp========" << endl;
+    //     cout << "=======================" << endl;
+
+    //     cout<<"t1 :";
+    //     cout<< t1 <<endl;
+    //     cout<<"unwarp :";
+    //     cout<< toy::unwrap(t1)<<endl;
+
+    //     cout<<"t2 :";
+    //     cout<< t2 <<endl;
+    //     cout<<"unwarp :";
+    //     cout<< toy::unwrap(t2)<<endl;
+    // }
+
 }

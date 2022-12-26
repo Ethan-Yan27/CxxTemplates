@@ -3,6 +3,9 @@
 
 namespace toy{
 
+template <class T>
+using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
+
 namespace detail {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -83,6 +86,11 @@ struct Tuple: TupleBase<T...> {
     template<class... U>
     Tuple(Tuple<U...> const& u): TupleBase<T...>{static_cast<TupleBase<T...> const&>(u)} {}
 };
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////Get element////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 template<std::size_t I, class... T>
 auto get(Tuple<T...> const& t){
@@ -234,7 +242,7 @@ constexpr auto tuple_apply(Tuple&& t, F&& f, std::index_sequence<Is...>){
 
 template<class Tuple, class F>
 constexpr auto apply(Tuple&& t, F&& f){
-    return detail::tuple_apply(std::forward<Tuple>(t), std::forward<F>(f), std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+    return detail::tuple_apply(std::forward<Tuple>(t), std::forward<F>(f), std::make_index_sequence<std::tuple_size_v<remove_cvref_t<Tuple>>>{});
 }
 
 ////
@@ -290,12 +298,45 @@ constexpr auto transform(Tuple&& t, F&& f){
 
 template<class T>
 constexpr auto flatten_to_tuple(T const& t){ // XXX cat only supports 1/2 arguments.
-    if constexpr (is_tuple<T>::value){
+    if constexpr (is_tuple<remove_cvref_t<T>>::value){
         return detail::tuple_transform_apply(t, [](auto const& a) { return flatten_to_tuple(a);} , [](auto const&... a){ return cat(a...);}, std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<T>>>{});
     } else {
         return make_tuple(t);
     }
 }
+
+template<class T>
+constexpr auto front(T&& t){
+    if constexpr (is_tuple<remove_cvref_t<T>>::value){
+        return front(get<0>(std::forward<T>(t)));
+    } else {
+        return std::forward<T>(t);
+    }
+}
+
+template<class T>
+constexpr auto back(T&& t){
+    if constexpr (is_tuple<remove_cvref_t<T>>::value){
+        constexpr int N = std::tuple_size<remove_cvref_t<T>>::value;
+        return back(get<N-1>(std::forward<T>(t)));
+    } else {
+        return std::forward<T>(t);
+    }
+}
+
+// template <class T>
+// constexpr auto unwrap(T const& t)  /// XXX: do not have general usage of this function.
+// {
+//   if constexpr (is_tuple<T>::value) {
+//     if constexpr (std::tuple_size<T>::value == 1) {
+//       return unwrap(get<0>(t));
+//     } else {
+//       return t;
+//     }
+//   } else {
+//     return t;
+//   }
+// }
 
 
 } // namespace toy
