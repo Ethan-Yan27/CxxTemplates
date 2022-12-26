@@ -1,6 +1,8 @@
 #include <iostream>
 #include <utility>
 
+namespace toy{
+
 namespace detail {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -112,18 +114,8 @@ auto get(Tuple<T...> && t){
 // }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-namespace std{
-
 template <class... T>
-struct tuple_size<Tuple<T...>>
-    : std::integral_constant<std::size_t, sizeof...(T)>
-{};
-
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-template <class... T>
-constexpr Tuple<std::decay_t<T>...> make_Tuple(T &&...t)
+constexpr Tuple<std::decay_t<T>...> make_tuple(T &&...t)
 {
 return {std::forward<T>(t)...};
 }
@@ -186,13 +178,13 @@ template <class... T, std::size_t... Is>
 auto tuple_reverse(Tuple<T...> const& t, std::index_sequence<Is...>)
 {
     constexpr std::size_t Len = sizeof...(T);
-    return make_Tuple(get<Len - Is - 1>(t)...);
+    return make_tuple(get<Len - Is - 1>(t)...);
 }
 
 template <class... T, class... U, std::size_t... Is0, std::size_t... Is1>
 auto tuple_cat(Tuple<T...> const& t, Tuple<U...> const& u, std::index_sequence<Is0...>, std::index_sequence<Is1...>)
 {
-    return make_Tuple(get<Is0>(t)..., get<Is1>(u)...);
+    return make_tuple(get<Is0>(t)..., get<Is1>(u)...);
 }
 
 }
@@ -207,3 +199,13 @@ template <class... T, class... U>
 auto cat(Tuple<T...> const& t, Tuple<U...> const& u){
     return tuple_cat(t, u, std::index_sequence_for<T...>{}, std::index_sequence_for<U...>{});
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace std{
+
+template <class... T>
+struct tuple_size<toy::Tuple<T...>>
+    : std::integral_constant<std::size_t, sizeof...(T)>
+{};
+
+} // namespace std

@@ -4,6 +4,8 @@
 
 using std::cout;
 using std::endl;
+using toy::print_tuple;
+using toy::Tuple;
 
 template <class T, T v> 
 using constant = typename std::integral_constant<T,v>::type;
@@ -11,7 +13,7 @@ using constant = typename std::integral_constant<T,v>::type;
 int main()
 {
     {
-        auto tmp_tuple = make_Tuple(1, 2);
+        auto tmp_tuple = toy::make_tuple(1, 2);
         cout << "=======================" << endl;
         cout << "Tuple<int, int>" << endl;
         cout << "tuple size :" << std::tuple_size_v<decltype(tmp_tuple)> << endl;
@@ -22,7 +24,7 @@ int main()
     }
 
     {
-        auto tmp_tuple = make_Tuple(1, 2, 5, 10);
+        auto tmp_tuple = toy::make_tuple(1, 2, 5, 10);
         
         cout << "=======================" << endl;
         cout << "Tuple<int, int, int, int>" << endl;
@@ -34,7 +36,7 @@ int main()
     }
 
     {
-        auto tmp_tuple = make_Tuple(1, constant<int, 666>{}, 5, 10);
+        auto tmp_tuple = toy::make_tuple(1, constant<int, 666>{}, 5, 10);
         
         cout << "=======================" << endl;
         cout << "Tuple<int, constant<int, 666>, int, int>;" << endl;
@@ -47,7 +49,7 @@ int main()
 
     {
 
-        auto tmp_tuple = make_Tuple(1, constant<int, 666>{}, constant<int, 777>{}, constant<int, 888>{});
+        auto tmp_tuple = toy::make_tuple(1, constant<int, 666>{}, constant<int, 777>{}, constant<int, 888>{});
         
         cout << "=======================" << endl;
         cout << "Tuple<int, constant<int, 666>, constant<int, 666>, constant<int, 666>>" << endl;
@@ -59,7 +61,7 @@ int main()
     }
 
     {
-        auto tmp_tuple = make_Tuple(constant<int, 1>{}, constant<int, 2>{}, constant<int, 3>{}, constant<int, 4>{}); // No matter what is put here :)
+        auto tmp_tuple = toy::make_tuple(constant<int, 1>{}, constant<int, 2>{}, constant<int, 3>{}, constant<int, 4>{}); // No matter what is put here :)
         
         cout << "=======================" << endl;
         cout << "Tuple<constant<int, 1>, constant<int, 2>, constant<int, 3>, constant<int, 4>>" << endl;
@@ -75,10 +77,10 @@ int main()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     {
-        auto t1 = make_Tuple(1,2,3,4);
-        auto t2 = make_Tuple(1,2,3);
-        auto t3 = make_Tuple(1,2,3,4);
-        auto t4 = make_Tuple(1,constant<int, 2>{},3,4);
+        auto t1 = toy::make_tuple(1,2,3,4);
+        auto t2 = toy::make_tuple(1,2,3);
+        auto t3 = toy::make_tuple(1,2,3,4);
+        auto t4 = toy::make_tuple(1,constant<int, 2>{},3,4);
         
         cout << "=======================" << endl;
         cout << "======Tuple Equal======" << endl;
@@ -106,8 +108,8 @@ int main()
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
     {
-        auto t1 = make_Tuple(1,2,3,4,6,7,8,9,10);
-        auto t2 = reverse(t1);
+        auto t1 = toy::make_tuple(1,2,3,4,6,7,8,9,10);
+        auto t2 = toy::reverse(t1);
         
         cout << "=======================" << endl;
         cout << "========Reverse========" << endl;
@@ -120,9 +122,9 @@ int main()
     }
 
     {
-        auto t1 = make_Tuple(1,2,3,4,6,7,8,9,10);
-        auto t2 = reverse(t1);
-        auto t3 = cat(t1, t2);
+        auto t1 = toy::make_tuple(1,2,3,4,6,7,8,9,10);
+        auto t2 = toy::reverse(t1);
+        auto t3 = toy::cat(t1, t2);
         
         cout << "=======================" << endl;
         cout << "==========Cat==========" << endl;
