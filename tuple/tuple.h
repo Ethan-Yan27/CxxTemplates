@@ -207,16 +207,16 @@ auto cat(Tuple<T...> const& t, Tuple<U...> const& u){
 
 namespace detail{
 
-template<class F, class Tuple, std::size_t... Is>
-constexpr auto tuple_apply(F&& f, Tuple&& t, std::index_sequence<Is...>){
+template<class Tuple, class F, std::size_t... Is>
+constexpr auto tuple_apply(Tuple&& t, F&& f, std::index_sequence<Is...>){
     return f(get<Is>(t)...);
 }
 
 }
 
-template<class F, class Tuple>
-constexpr auto apply(F&& f, Tuple&& t){
-    return detail::tuple_apply(std::forward<F>(f), std::forward<Tuple>(t), std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+template<class Tuple, class F>
+constexpr auto apply(Tuple&& t, F&& f){
+    return detail::tuple_apply(std::forward<Tuple>(t), std::forward<F>(f), std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
 }
 
 ////
@@ -233,7 +233,7 @@ std::ostream& operator<<(std::ostream& os, Tuple<Ts...> const& Tuple){
         os << "]";
     };
     
-    toy::apply(lambda, Tuple);
+    toy::apply(Tuple, lambda);
     return os;
 }
 

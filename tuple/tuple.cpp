@@ -144,7 +144,7 @@ int main()
         };
 
         auto t1 = toy::make_tuple(1,10,100,12,34,4,1,4,5,12,43);
-        auto t2 = toy::apply(print_lambda, t1);
+        auto t2 = toy::apply(t1, print_lambda);
         
         cout << "=======================" << endl;
         cout << "==========Apply========" << endl;
