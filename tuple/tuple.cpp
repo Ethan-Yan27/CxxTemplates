@@ -139,11 +139,11 @@ int main()
     }
 
     {
-        auto print_lambda = [](auto a, auto b, auto c) {
-            return a + b + c;
+        auto print_lambda = [](auto const& ...a) { // lambda supports params pack which is different with variadic arguments.
+            return (a + ...); 
         };
 
-        auto t1 = toy::make_tuple(1,10,100);
+        auto t1 = toy::make_tuple(1,10,100,12,34,4,1,4,5,12,43);
         auto t2 = toy::apply(print_lambda, t1);
         
         cout << "=======================" << endl;
