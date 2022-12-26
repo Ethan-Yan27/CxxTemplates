@@ -122,6 +122,14 @@ struct tuple_size<Tuple<T...>>
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+template <class... T>
+constexpr Tuple<std::decay_t<T>...> make_Tuple(T &&...t)
+{
+return {std::forward<T>(t)...};
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
 template<class... T, std::size_t... Is>
 void print_tuple_core(Tuple<T...> const& t, std::integer_sequence<std::size_t, Is...>){
     // Fold expression : https://en.cppreference.com/w/cpp/language/fold
@@ -137,4 +145,65 @@ void print_tuple(Tuple<T...> const& t){
     std::cout << "(";
     print_tuple_core(t, std::index_sequence_for<T...>{});
     std::cout << ")";
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////Operators///////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+namespace detail{
+
+template<class... T, class... U, std::size_t... Is>
+bool tuple_equal(Tuple<T...> const& t, Tuple<U...> const& u, std::integer_sequence<std::size_t, Is...>){
+    static_assert(sizeof...(T) == sizeof...(U), "Size is not same!");
+    return (... && (get<Is>(t) == get<Is>(u)));
+}
+
+}
+
+template<class... T, class... U>
+bool operator==(Tuple<T...> const& t, Tuple<U...> const& u) { // TODO: check if it is a tuple
+    if constexpr (sizeof...(T) != sizeof...(U)) {
+        return false;
+    } else {
+        return detail::tuple_equal(t, u,  std::index_sequence_for<T...>{});
+
+    }
+}
+
+template<class... T, class... U>
+bool operator!=(Tuple<T...> const& t, Tuple<U...> const& u) {
+    return !(t == u);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////Operations//////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+namespace detail
+{
+
+template <class... T, std::size_t... Is>
+auto tuple_reverse(Tuple<T...> const& t, std::index_sequence<Is...>)
+{
+    constexpr std::size_t Len = sizeof...(T);
+    return make_Tuple(get<Len - Is - 1>(t)...);
+}
+
+template <class... T, class... U, std::size_t... Is0, std::size_t... Is1>
+auto tuple_cat(Tuple<T...> const& t, Tuple<U...> const& u, std::index_sequence<Is0...>, std::index_sequence<Is1...>)
+{
+    return make_Tuple(get<Is0>(t)..., get<Is1>(u)...);
+}
+
+}
+
+template <class... T>
+auto reverse(Tuple<T...> const &t)
+{
+    return detail::tuple_reverse(t, std::index_sequence_for<T...>{});
+}
+
+template <class... T, class... U>
+auto cat(Tuple<T...> const& t, Tuple<U...> const& u){
+    return tuple_cat(t, u, std::index_sequence_for<T...>{}, std::index_sequence_for<U...>{});
 }
