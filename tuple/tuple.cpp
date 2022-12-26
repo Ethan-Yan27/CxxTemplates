@@ -137,4 +137,22 @@ int main()
         cout<<"Cat t1 & t2";
         print_tuple(t3); cout<<endl;
     }
+
+    {
+        auto print_lambda = [](auto a, auto b, auto c) {
+            return a + b + c;
+        };
+
+        auto t1 = toy::make_tuple(1,10,100);
+        auto t2 = toy::apply(print_lambda, t1);
+        
+        cout << "=======================" << endl;
+        cout << "==========Apply========" << endl;
+        cout << "=======================" << endl;
+
+        cout<<"t1 :";
+        cout<< t1 <<endl;
+        cout<<"Apply :";
+        cout<< t2 <<endl;
+    }
 }

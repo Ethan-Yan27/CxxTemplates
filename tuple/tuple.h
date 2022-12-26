@@ -199,6 +199,46 @@ template <class... T, class... U>
 auto cat(Tuple<T...> const& t, Tuple<U...> const& u){
     return tuple_cat(t, u, std::index_sequence_for<T...>{}, std::index_sequence_for<U...>{});
 }
+///
+// https://en.cppreference.com/w/cpp/utility/apply
+// Apply : (t, f) ==> f(t0, t1, .. tn-1) 
+// C++ template 2nd: Section 25.4
+///
+
+namespace detail{
+
+template<class F, class Tuple, std::size_t... Is>
+constexpr auto tuple_apply(F&& f, Tuple&& t, std::index_sequence<Is...>){
+    return f(get<Is>(t)...);
+}
+
+}
+
+template<class F, class Tuple>
+constexpr auto apply(F&& f, Tuple&& t){
+    return detail::tuple_apply(std::forward<F>(f), std::forward<Tuple>(t), std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+}
+
+////
+// Usage of apply operations
+////
+
+template<typename... Ts>
+std::ostream& operator<<(std::ostream& os, Tuple<Ts...> const& Tuple){
+    auto lambda = [&os](Ts const&... elems)
+    {
+        os << "[";
+        int n{0};
+        ((os << (n++ == 0 ? "" : ",") << elems), ...);
+        os << "]";
+    };
+    
+    toy::apply(lambda, Tuple);
+    return os;
+}
+
+} // namespace toy
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace std{
