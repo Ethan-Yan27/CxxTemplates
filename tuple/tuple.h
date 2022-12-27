@@ -6,6 +6,20 @@ namespace toy{
 template <class T>
 using remove_cvref_t = std::remove_cv_t<std::remove_reference_t<T>>;
 
+template<class Tuple>
+using make_seq_for_tuple = std::make_index_sequence<std::tuple_size_v<remove_cvref_t<Tuple>>>;
+
+template<class T, int begin>
+struct make_seq_range_impl;
+
+template<std::size_t... Is, int begin>
+struct make_seq_range_impl<std::index_sequence<Is...> , begin> {
+    using type = std::index_sequence<(Is+begin)...>;
+};
+
+template<int begin, int end> // [begin, end)
+using make_seq_range = typename make_seq_range_impl<std::make_index_sequence< (end-begin > 0) ? (end-begin) : 0>, begin>::type;
+
 namespace detail {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -71,7 +85,7 @@ struct TupleBase <std::index_sequence<I...>, T...> : TupleElt<I, T>... { // Empt
 } // namespace detail
 
 template <class... T>
-using TupleBase = detail::TupleBase<std::make_index_sequence<sizeof...(T)>, T...>;
+using TupleBase = detail::TupleBase<std::index_sequence_for<T...>, T...>;
 
 template <class... T>
 struct Tuple: TupleBase<T...> {
@@ -139,7 +153,7 @@ std::false_type has_tuple_size(...);
 } // end namespace detail
 
 template <class T>
-struct is_tuple : decltype(detail::has_tuple_size<T>(0)) {};
+struct is_tuple : decltype(detail::has_tuple_size<toy::remove_cvref_t<T>>(0)) {};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -225,6 +239,36 @@ template <class... T, class... U>
 auto cat(Tuple<T...> const& t, Tuple<U...> const& u){
     return tuple_cat(t, u, std::index_sequence_for<T...>{}, std::index_sequence_for<U...>{});
 }
+
+namespace detail{
+
+template<class T, class X, std::size_t... Is0, std::size_t... Is1, std::size_t... Is2>
+constexpr auto construct(T const&t, X const& x, std::index_sequence<Is0...>,   std::index_sequence<Is1...>,  std::index_sequence<Is2...>){
+    // return toy::make_tuple(get<Is0>(t)... , (void(Is1), x)... , get<Is2>(t)... );
+    return toy::make_tuple(get<Is0>(t)... , (void(Is1), x)...,  get<Is2>(t)...);
+
+}
+
+} // end namespace detail
+
+// Insert element into the Nth position of the tuple
+template<int N, class T, class X>
+constexpr auto insert(T const& t, X const& x){
+    return detail::construct(t, x, make_seq_range<0, N>{}, std::index_sequence<0>{}, make_seq_range<N, std::tuple_size<T>::value>{});
+}
+
+// remove element into the Nth position of the tuple
+template<int N, class T>
+constexpr auto remove(T const& t){
+    return detail::construct(t, 0, make_seq_range<0, N>{}, std::index_sequence<>{}, make_seq_range<N+1, std::tuple_size<T>::value>{});
+}
+
+// replace the Nth element of the tuple
+template<int N, class T, class X>
+constexpr auto replace(T const& t, X const& x){
+    return detail::construct(t, x, make_seq_range<0, N>{}, std::index_sequence<0>{}, make_seq_range<N+1, std::tuple_size<T>::value>{});
+}
+
 ///
 // https://en.cppreference.com/w/cpp/utility/apply
 // Apply : (t, f) ==> f(t0, t1, .. tn-1) 
@@ -242,7 +286,7 @@ constexpr auto tuple_apply(Tuple&& t, F&& f, std::index_sequence<Is...>){
 
 template<class Tuple, class F>
 constexpr auto apply(Tuple&& t, F&& f){
-    return detail::tuple_apply(std::forward<Tuple>(t), std::forward<F>(f), std::make_index_sequence<std::tuple_size_v<remove_cvref_t<Tuple>>>{});
+    return detail::tuple_apply(std::forward<Tuple>(t), std::forward<F>(f), make_seq_for_tuple<Tuple>{});
 }
 
 ////
@@ -278,7 +322,7 @@ constexpr auto tuple_transform_apply(Tuple&& t, F&& f, G&& g, std::index_sequenc
 
 template<class Tuple, class F>
 constexpr auto transform(Tuple&& t, F&& f){
-    return detail::tuple_transform_apply(std::forward<Tuple>(t), std::forward<F>(f), [](auto... elems){ return make_tuple(elems...);}, std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+    return detail::tuple_transform_apply(std::forward<Tuple>(t), std::forward<F>(f), [](auto... elems){ return make_tuple(elems...);}, make_seq_for_tuple<Tuple>{});
 }
 
 ///
@@ -287,7 +331,7 @@ constexpr auto transform(Tuple&& t, F&& f){
 
 // template<class Tuple, class F>
 // constexpr void for_each(Tuple&& t, F&& f){
-//      detail::tuple_apply(std::forward<Tuple>(t), [&](auto&&... elems) { (f(static_cast<decltype(elems)&&>(elems)),...); }, std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<Tuple>>>{});
+//      detail::tuple_apply(std::forward<Tuple>(t), [&](auto&&... elems) { (f(static_cast<decltype(elems)&&>(elems)),...); }, make_seq_for_tuple<Tuple>{});
 // }
 
 ///
@@ -298,8 +342,8 @@ constexpr auto transform(Tuple&& t, F&& f){
 
 template<class T>
 constexpr auto flatten_to_tuple(T const& t){ // XXX cat only supports 1/2 arguments.
-    if constexpr (is_tuple<remove_cvref_t<T>>::value){
-        return detail::tuple_transform_apply(t, [](auto const& a) { return flatten_to_tuple(a);} , [](auto const&... a){ return cat(a...);}, std::make_index_sequence<std::tuple_size_v<std::remove_reference_t<T>>>{});
+    if constexpr (is_tuple<T>::value){
+        return detail::tuple_transform_apply(t, [](auto const& a) { return flatten_to_tuple(a);} , [](auto const&... a){ return cat(a...);}, make_seq_for_tuple<T>{});
     } else {
         return make_tuple(t);
     }
@@ -307,7 +351,7 @@ constexpr auto flatten_to_tuple(T const& t){ // XXX cat only supports 1/2 argume
 
 template<class T>
 constexpr auto front(T&& t){
-    if constexpr (is_tuple<remove_cvref_t<T>>::value){
+    if constexpr (is_tuple<T>::value){
         return front(get<0>(std::forward<T>(t)));
     } else {
         return std::forward<T>(t);
@@ -316,7 +360,7 @@ constexpr auto front(T&& t){
 
 template<class T>
 constexpr auto back(T&& t){
-    if constexpr (is_tuple<remove_cvref_t<T>>::value){
+    if constexpr (is_tuple<T>::value){
         constexpr int N = std::tuple_size<remove_cvref_t<T>>::value;
         return back(get<N-1>(std::forward<T>(t)));
     } else {

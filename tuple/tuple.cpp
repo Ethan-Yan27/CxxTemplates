@@ -139,6 +139,48 @@ int main()
     }
 
     {
+        auto t1 = toy::make_tuple(1,2,3,4,6,7,8,9,10);
+        auto t2 = toy::insert<5>(t1, 99);
+        
+        cout << "=======================" << endl;
+        cout << "========insert=========" << endl;
+        cout << "=======================" << endl;
+
+        cout<<"t1       :";
+        print_tuple(t1); cout<<endl;
+        cout<<"insert   :";
+        print_tuple(t2); cout<<endl;
+    }
+
+    {
+        auto t1 = toy::make_tuple(1,2,3,4,6,7,8,9,10);
+        auto t2 = toy::remove<3>(t1);
+        
+        cout << "=======================" << endl;
+        cout << "========remove=========" << endl;
+        cout << "=======================" << endl;
+
+        cout<<"t1       :";
+        print_tuple(t1); cout<<endl;
+        cout<<"remove   :";
+        print_tuple(t2); cout<<endl;
+    }
+
+    {
+        auto t1 = toy::make_tuple(1,2,3,4,6,7,8,9,10);
+        auto t2 = toy::replace<5>(t1, 99);
+        
+        cout << "=======================" << endl;
+        cout << "========replace=========" << endl;
+        cout << "=======================" << endl;
+
+        cout<<"t1       :";
+        print_tuple(t1); cout<<endl;
+        cout<<"replace  :";
+        print_tuple(t2); cout<<endl;
+    }
+
+    {
         auto print_lambda = [](auto const& ...a) { // lambda supports params pack which is different with variadic arguments.
             return (a + ...); 
         };
