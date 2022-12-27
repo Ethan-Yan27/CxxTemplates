@@ -181,6 +181,31 @@ int main()
     }
 
     {
+        auto t1 = toy::repeat<10>('x');
+        
+        cout << "=======================" << endl;
+        cout << "========repeat=========" << endl;
+        cout << "=======================" << endl;
+
+        cout<<"repeat   :";
+        print_tuple(t1); cout<<endl;
+    }
+
+    {
+        auto t1 = toy::make_tuple(toy::make_tuple(1, toy::make_tuple(3)),toy::make_tuple(2, toy::make_tuple(4)));
+        auto t2 = toy::repeat_like(t1,"x");
+
+        
+        cout << "=======================" << endl;
+        cout << "========repeat_like====" << endl;
+        cout << "=======================" << endl;
+
+        cout << t1 <<endl;
+        cout <<"repeat_like  :";
+        cout << t2 <<endl;
+    }
+
+    {
         auto print_lambda = [](auto const& ...a) { // lambda supports params pack which is different with variadic arguments.
             return (a + ...); 
         };

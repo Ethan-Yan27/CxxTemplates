@@ -269,6 +269,23 @@ constexpr auto replace(T const& t, X const& x){
     return detail::construct(t, x, make_seq_range<0, N>{}, std::index_sequence<0>{}, make_seq_range<N+1, std::tuple_size<T>::value>{});
 }
 
+// replace the Nth element of the tuple
+template<int N, class X>
+constexpr auto repeat(X const& x){
+    return detail::construct(0, x, std::index_sequence<>{}, make_seq_range<0, N>{}, std::index_sequence<>{});
+}
+
+// replace the Nth element of the tuple
+template<class T, class X>
+constexpr auto repeat_like(T const& t, X const& x){
+    if constexpr(is_tuple<T>::value){
+        return transform(t, [&](auto const& a){ return repeat_like(a, x); });
+    } else {
+        return x;
+    }
+}
+
+
 ///
 // https://en.cppreference.com/w/cpp/utility/apply
 // Apply : (t, f) ==> f(t0, t1, .. tn-1) 
