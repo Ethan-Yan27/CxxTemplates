@@ -317,4 +317,23 @@ int main()
     //     cout<< toy::unwrap(t2)<<endl;
     // }
 
+    {
+        // ((A,a),((B,b),(C,c)),d) 
+        auto t1 = toy::make_tuple(toy::make_tuple("A", "a"), toy::make_tuple(toy::make_tuple("B", "b"), toy::make_tuple("C", "c")), "d");
+        auto guide = toy::make_tuple("X", toy::make_tuple("X", "X"));
+        auto guide1 = toy::make_tuple("X", "X");
+
+        
+        cout << "=======================" << endl;
+        cout << "========zip2_by========" << endl;
+        cout << "=======================" << endl;
+
+        cout<<"t1       :";
+        cout<< t1 <<endl;
+        cout<<"Guide    :";
+        cout<< guide <<endl;
+        cout<<"zip2_by :";
+        cout<< toy::zip2_by(t1,guide)<<endl;
+    }
+
 }

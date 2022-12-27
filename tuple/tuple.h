@@ -105,25 +105,6 @@ struct Tuple: TupleBase<T...> {
 ///////////////////////////////////////Get element////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-template<std::size_t I, class... T>
-auto get(Tuple<T...> const& t){
-    static_assert(I < sizeof...(T), "I is out of index");
-    return detail::getv<I>(t); 
-}
-
-template<std::size_t I, class... T>
-auto get(Tuple<T...> &t){
-    static_assert(I < sizeof...(T), "I is out of index");
-    return detail::getv<I>(t); 
-}
-
-template<std::size_t I, class... T>
-auto get(Tuple<T...> && t){
-    static_assert(I < sizeof...(T), "I is out of index");
-    return detail::getv<I>(static_cast<Tuple<T...> &&>(t)); 
-}
-
 ////////////////////////
 // Experiment : perfect forward
 // Error: : note: candidate function [with I = 1, T = <int, int>] not viable: expects an "rvalue" for 1st argumen
@@ -134,6 +115,18 @@ auto get(Tuple<T...> && t){
 //     static_assert(I < sizeof...(T), "I is out of index");
 //     return detail::getv<I>(std::forward<Tuple<T...>>(t)); // TODO: test rvalue.
 // }
+
+template<std::size_t I, class T>
+auto get(T&& t){
+    static_assert(I < std::tuple_size<remove_cvref_t<T>>::value, "I is out of index");
+    return detail::getv<I>(std::forward<T>(t)); 
+}
+
+template<std::size_t I0, std::size_t I1, std::size_t... Is, class T>
+auto get(T&& t){
+    return get<I1, Is...> (get<I0>(std::forward<T>(t))); 
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <class... T>
@@ -399,6 +392,45 @@ constexpr auto back(T&& t){
 //   }
 // }
 
+///
+// zip2_by -- A guided zip for rank-2 tuples
+//   Take a tuple like ((A,a),((B,b),(C,c)),d) 
+//   and produce a tuple ((A,(B,C)),(a,(b,c),d)) 
+//   where the rank-2 modes are selected by the terminals of the guide (X,(X,X))
+///
+
+namespace detail {
+
+template <class T, class TG, std::size_t... Is, std::size_t... Js>
+constexpr auto zip2_by(T const& t, TG const& guide, std::index_sequence<Is...>, std::index_sequence<Js...>)
+{
+  // zip2_by produces the modes like ((A,a),(B,b),...)
+  auto split = make_tuple(zip2_by(get<Is>(t), get<Is>(guide))...);
+  std::cout<<"split: "<<split<< "guide:" <<guide <<std::endl;
+
+  // Rearrange and append missing modes from t to make ((A,B,...),(a,b,...,x,y))
+  return make_tuple(make_tuple(get<Is,0>(split)...),
+                    make_tuple(get<Is,1>(split)..., get<Js>(t)...));
+}
+
+} // end namespace detail
+
+template <class T, class TG>
+constexpr auto zip2_by(T const& t, TG const& guide)
+{
+  if constexpr (is_tuple<TG>::value) {
+    constexpr int TR = std::tuple_size<T>::value; // 3
+    constexpr int GR = std::tuple_size<TG>::value; // 2
+    static_assert(TR >= GR, "Mismatched ranks");
+    return detail::zip2_by(t, guide,
+                           make_seq_range< 0, GR>{},
+                           make_seq_range<GR, TR>{});
+  } else {
+    // For X in the guide, the corresponding tuple element must be rank-2
+    static_assert(std::tuple_size<T>::value == 2, "Mismatched ranks");
+    return t;
+  }
+}
 
 } // namespace toy
 
